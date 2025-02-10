@@ -46,16 +46,16 @@ def explore_embeddings(dev_d: Dict[str, List[Union[str, int]]],
 if __name__ == '__main__':
     # Run every demo function in basics.py
     # uncomment the following line to run
-    run_all_basics_demo()
+    # run_all_basics_demo()
 
-    # load raw data
-    # uncomment the following line to run
+    # # load raw data
+    # # uncomment the following line to run
     dev_data, train_data, test_data = load_data()
 
-    # Run a single training run
-    # uncomment the following line to run
-    single_run(dev_data, train_data, test_data)
+    # # Run a single training run
+    # # uncomment the following line to run
+    # single_run(dev_data, train_data, test_data)
 
-    # Explore different embeddings
-    # uncomment the following line to run
+    # # Explore different embeddings
+    # # uncomment the following line to run
     explore_embeddings(dev_data, train_data, test_data)

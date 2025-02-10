@@ -61,13 +61,24 @@ def featurize(sentence: str, embeddings: gensim.models.keyedvectors.KeyedVectors
     # sequence of word embeddings
     vectors = []
 
+    if not sentence:
+        return None
+    
     # map each word to its embedding
     for word in word_tokenize(sentence.lower()):
         try:
-            vectors.append(embeddings[word])
+            if word in embeddings:
+                vectors.append(torch.tensor(embeddings[word], dtype=torch.float32))  # Convert to tensor
         except KeyError:
             pass
+    
+    if len(vectors) == 0:
+        return None
 
+    torch_vectors = torch.stack(vectors)  # Stack all word tensors into single tensor
+    embed_dim = torch.mean(torch_vectors, dim=0)  # Compute the mean along words dimension
+ 
+    return embed_dim
     # TODO: complete the function to compute the average embedding of the sentence
     # your return should be
     # None - if the vector sequence is empty, i.e. the sentence is empty or None of the words in the sentence is in the embedding vocabulary
@@ -81,10 +92,11 @@ def create_tensor_dataset(raw_data: Dict[str, List[Union[int, str]]],
     for text, label in tqdm(zip(raw_data['text'], raw_data['label'])):
 
         # TODO: complete the for loop to featurize each sentence
+        feature = featurize(text, embeddings)
         # only add the feature and label to the list if the feature is not None
-        
-
-
+        if feature is not None:
+            all_features.append(feature)
+            all_labels.append(label) 
         # your code ends here
 
     # stack all features and labels into two single tensors and create a TensorDataset
@@ -113,7 +125,7 @@ class SentimentClassifier(nn.Module):
         super().__init__()
         self.embed_dim = embed_dim
         self.num_classes = num_classes
-
+        self.linear = nn.Linear(embed_dim, num_classes)
         # TODO: define the linear layer
         # Hint: follow the hints in the pdf description
         
@@ -124,7 +136,7 @@ class SentimentClassifier(nn.Module):
     def forward(self, inp):
         # TODO: complete the forward function
         # Hint: follow the hints in the pdf description
-        
+        logits = self.linear(inp) 
         
         # your code ends here
 
@@ -142,7 +154,8 @@ def accuracy(logits: torch.FloatTensor, labels: torch.LongTensor) -> torch.Float
     # Hint: follow the hints in the pdf description, the return should be a tensor of 0s and 1s with the same shape as labels
     # labels is a tensor of shape (batch_size,)
     # logits is a tensor of shape (batch_size, num_classes)
-
+    predictions = torch.argmax(logits, dim=1)
+    return (predictions == labels).float()
 
 def evaluate(model: SentimentClassifier, eval_dataloader: DataLoader) -> Tuple[float, float]:
     model.eval()
